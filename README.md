@@ -181,30 +181,39 @@ Evaluated on three multi-hop QA benchmarks (Recall@5):
 
 ## 🗄️ Milvus Backend
 
-Vector Graph RAG supports three Milvus deployment modes — just change `milvus_uri`:
+Just change `milvus_uri` to switch between deployment modes:
 
-| Mode | `milvus_uri` | `milvus_token` | Best for |
-|------|-------------|----------------|----------|
-| **Milvus Lite** (default) | `./vector_graph_rag.db` | — | Personal use, dev — zero config |
-| **Milvus Server** | `http://localhost:19530` | Optional | Multi-dataset, team environments |
-| ⭐ **Zilliz Cloud** | `https://in03-xxx.api.gcp-us-west1.zillizcloud.com` | API key | Production, fully managed — [free tier available](https://cloud.zilliz.com/signup?utm_source=github&utm_medium=referral&utm_campaign=vector-graph-rag-readme) |
+**Milvus Lite** (default) — zero config, single-process, data stored in a local file. Great for prototyping and small datasets:
 
-> **Recommended:** [Zilliz Cloud](https://cloud.zilliz.com/signup?utm_source=github&utm_medium=referral&utm_campaign=vector-graph-rag-readme) gives you zero-config, zero-ops Milvus with concurrent access and real-time indexing — no Docker needed.
+```python
+rag = VectorGraphRAG(milvus_uri="./my_graph.db")  # just works
+```
 
-<details>
-<summary>Sign up for a free Zilliz Cloud cluster 👈</summary>
-
-You can [sign up](https://cloud.zilliz.com/signup?utm_source=github&utm_medium=referral&utm_campaign=vector-graph-rag-readme) on Zilliz Cloud to get a free cluster and API key.
-
-![Sign up and get API key](https://raw.githubusercontent.com/zilliztech/CodeIndexer/master/assets/signup_and_get_apikey.png)
-
-Use your endpoint as `milvus_uri` and your API key as `milvus_token`:
+⭐ **Zilliz Cloud** — fully managed, [free tier available](https://cloud.zilliz.com/signup?utm_source=github&utm_medium=referral&utm_campaign=vector-graph-rag-readme) — [sign up](https://cloud.zilliz.com/signup?utm_source=github&utm_medium=referral&utm_campaign=vector-graph-rag-readme) 👇:
 
 ```python
 rag = VectorGraphRAG(
     milvus_uri="https://in03-xxx.api.gcp-us-west1.zillizcloud.com",
     milvus_token="your-api-key",
 )
+```
+
+<details>
+<summary>⭐ Sign up for a free Zilliz Cloud cluster</summary>
+
+You can [sign up](https://cloud.zilliz.com/signup?utm_source=github&utm_medium=referral&utm_campaign=vector-graph-rag-readme) on Zilliz Cloud to get a free cluster and API key.
+
+![Sign up and get API key](https://raw.githubusercontent.com/zilliztech/CodeIndexer/master/assets/signup_and_get_apikey.png)
+
+</details>
+
+<details>
+<summary>Self-hosted Milvus Server (Docker) — for advanced users</summary>
+
+If you need a dedicated Milvus instance for multi-user or team environments, you can deploy Milvus standalone with Docker Compose. This requires Docker and some infrastructure knowledge. See the [official installation guide](https://milvus.io/docs/install_standalone-docker-compose.md) for detailed steps.
+
+```python
+rag = VectorGraphRAG(milvus_uri="http://localhost:19530")
 ```
 
 </details>
