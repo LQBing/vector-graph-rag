@@ -41,3 +41,6 @@ TODO_front.md
 tests/
 evaluation/
 *.ipynb
+
+# mount folder
+/data/

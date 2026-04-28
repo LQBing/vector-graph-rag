@@ -333,6 +333,9 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app.state.rag_instances: dict = {}  # graph_name -> VectorGraphRAG
     app.state.graph_instances: dict = {}  # graph_name -> Graph
 
+    # API prefix for production (统一 API 路径)
+    API_PREFIX = "/api"
+
     def get_rag(graph_name: Optional[str] = None) -> VectorGraphRAG:
         """Get or create RAG instance for a graph."""
         key = graph_name or "default"
@@ -355,12 +358,12 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
 
     # ==================== Endpoints ====================
 
-    @app.get("/health", response_model=HealthResponse, tags=["System"])
+    @app.get(f"{API_PREFIX}/health", response_model=HealthResponse, tags=["System"])
     async def health_check():
         """Check if the service is running."""
         return HealthResponse(status="ok", version=__version__)
 
-    @app.get("/graphs", response_model=ListGraphsResponse, tags=["System"])
+    @app.get(f"{API_PREFIX}/graphs", response_model=ListGraphsResponse, tags=["System"])
     async def list_graphs():
         """
         List all available graphs (datasets) in Milvus.
@@ -374,7 +377,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         )
         return ListGraphsResponse(graphs=[GraphInfo(**g) for g in graphs])
 
-    @app.get("/settings", response_model=SettingsResponse, tags=["System"])
+    @app.get(f"{API_PREFIX}/settings", response_model=SettingsResponse, tags=["System"])
     async def get_system_settings():
         """
         Get current system settings.
@@ -392,7 +395,9 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             openai_base_url=settings.openai_base_url,
         )
 
-    @app.delete("/graph/{graph_name}", response_model=DeleteResponse, tags=["System"])
+    @app.delete(
+        f"{API_PREFIX}/graph/{{graph_name}}", response_model=DeleteResponse, tags=["System"]
+    )
     async def delete_graph(graph_name: str):
         """
         Delete a graph (knowledge base) and all its collections.
@@ -428,7 +433,9 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to delete graph: {str(e)}")
 
-    @app.post("/add_documents", response_model=AddDocumentsResponse, tags=["Documents"])
+    @app.post(
+        f"{API_PREFIX}/add_documents", response_model=AddDocumentsResponse, tags=["Documents"]
+    )
     async def add_documents(
         request: AddDocumentsRequest,
         graph_name: Optional[str] = Query(default=None, description="Graph name to use"),
@@ -471,7 +478,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             document_ids=[doc.id for doc in result.documents if doc.id],
         )
 
-    @app.post("/import", response_model=ImportResponse, tags=["Documents"])
+    @app.post(f"{API_PREFIX}/import", response_model=ImportResponse, tags=["Documents"])
     async def import_documents(request: ImportRequest):
         """
         Import text documents from files or URLs.
@@ -524,7 +531,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             errors=load_result.errors,
         )
 
-    @app.post("/upload", response_model=ImportResponse, tags=["Documents"])
+    @app.post(f"{API_PREFIX}/upload", response_model=ImportResponse, tags=["Documents"])
     async def upload_files(
         files: List[UploadFile] = File(...),
         chunk_documents: bool = Form(True),
@@ -598,7 +605,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
                 except Exception:
                     pass
 
-    @app.post("/query", response_model=QueryResponse, tags=["Query"])
+    @app.post(f"{API_PREFIX}/query", response_model=QueryResponse, tags=["Query"])
     async def query(
         request: QueryRequest,
         graph_name: Optional[str] = Query(default=None, description="Graph name to use"),
@@ -723,7 +730,11 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
 
     # ==================== Graph Exploration ====================
 
-    @app.get("/graph/{graph_name}/stats", response_model=GraphStatsResponse, tags=["Graph"])
+    @app.get(
+        f"{API_PREFIX}/graph/{{graph_name}}/stats",
+        response_model=GraphStatsResponse,
+        tags=["Graph"],
+    )
     async def get_graph_stats(graph_name: str):
         """
         Get statistics for a graph.
@@ -750,7 +761,9 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             )
 
     @app.get(
-        "/graph/{graph_name}/neighbors/{entity_id}", response_model=NeighborResponse, tags=["Graph"]
+        f"{API_PREFIX}/graph/{{graph_name}}/neighbors/{{entity_id}}",
+        response_model=NeighborResponse,
+        tags=["Graph"],
     )
     async def get_entity_neighbors(
         graph_name: str,
@@ -821,7 +834,11 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
 
     # ==================== Document CRUD ====================
 
-    @app.get("/documents/{document_id}", response_model=DocumentResponse, tags=["Documents"])
+    @app.get(
+        f"{API_PREFIX}/documents/{{document_id}}",
+        response_model=DocumentResponse,
+        tags=["Documents"],
+    )
     async def get_document(
         document_id: str,
         graph_name: Optional[str] = Query(default=None, description="Graph name to use"),
@@ -842,7 +859,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             relation_ids=passage.relation_ids,
         )
 
-    @app.get("/documents", response_model=ListDocumentsResponse, tags=["Documents"])
+    @app.get(f"{API_PREFIX}/documents", response_model=ListDocumentsResponse, tags=["Documents"])
     async def list_documents(
         graph_name: Optional[str] = Query(default=None, description="Graph name to use"),
         query: Optional[str] = Query(
@@ -878,7 +895,11 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
                 total=0,
             )
 
-    @app.put("/documents/{document_id}", response_model=DocumentResponse, tags=["Documents"])
+    @app.put(
+        f"{API_PREFIX}/documents/{{document_id}}",
+        response_model=DocumentResponse,
+        tags=["Documents"],
+    )
     async def update_document(
         document_id: str,
         request: UpdateDocumentRequest,
@@ -912,7 +933,9 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             relation_ids=updated.relation_ids,
         )
 
-    @app.delete("/documents/{document_id}", response_model=DeleteResponse, tags=["Documents"])
+    @app.delete(
+        f"{API_PREFIX}/documents/{{document_id}}", response_model=DeleteResponse, tags=["Documents"]
+    )
     async def delete_document(
         document_id: str,
         graph_name: Optional[str] = Query(default=None, description="Graph name to use"),

@@ -27,6 +27,16 @@ ARG TORCH_BACKEND=cpu
 
 WORKDIR /app
 
+# Expose port
+EXPOSE 8000
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Set PYTHONPATH so the package can be imported
+ENV PYTHONPATH=/app/src
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
@@ -45,21 +55,15 @@ RUN sed -i '/^\[tool\.uv\.sources\]/,/^$/c\[tool.uv.sources]\ntorch = [{ index =
 
 # Install Python dependencies with specified PyTorch backend
 # Note: Not using --frozen because uv.lock may have different torch version locked
-RUN uv sync --no-dev --extra api
+RUN uv sync --no-dev --extra api --extra loaders --extra docs
 
 # Copy backend source code
 COPY src/ ./src/
 COPY api/ ./api/
 
+
 # Copy frontend build from stage 1
 COPY --from=frontend-builder /app/frontend/dist ./static
 
-# Expose port
-EXPOSE 8000
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-
 # Run the application
-CMD ["uv", "run", "uvicorn", "vector_graph_rag.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uv run uvicorn vector_graph_rag.api.app:app --host 0.0.0.0 --port ${VGRAG_API_PORT:-8000}"]

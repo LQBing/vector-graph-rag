@@ -1,0 +1,16 @@
+services:
+  app:
+    image: lqbing/vector-graph-rag
+    build:
+      context: .
+    ports:
+      - ${VGRAG_API_PORT:-8000}:${VGRAG_API_PORT:-8000}
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - VGRAG_API_PORT=${VGRAG_API_PORT:-8000}
+      - VGRAG_EMBEDDING_MODEL=${VGRAG_EMBEDDING_MODEL:-text-embedding-3-large}
+      - VGRAG_EMBEDDING_DIMENSION=${VGRAG_EMBEDDING_DIMENSION:-1536}
+      - VGRAG_MILVUS_URI=/app/data/vector_graph_rag.db
+    volumes:
+      - ./data/:/app/data/

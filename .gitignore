@@ -192,3 +192,6 @@ frontend/.svelte-kit/
 # TypeScript
 *.tsbuildinfo
 frontend/*.tsbuildinfo
+
+# mount folder
+/data/
